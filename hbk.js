@@ -10,155 +10,168 @@ var l_limit = 0;
 system = require("system");
 
 RenderUrlsToFile = function(top_urls, callbackPerUrl, callbackFinal) {
-    var next, page, retrieve, urlIndex, webpage, parse_data_url_array;
+    var next, page, retrieve, webpage, parse_data_url_array, path;
     var fs = require('fs');
-    if (u_limit == 0) {
-    	u_limit = top_urls.length;
-    }
-    for (var t_url = l_limit; t_url < u_limit; t_url++) {
-    	urls = [top_urls[t_url]];
-		var path = 'doctoralia_'+urls[0].split("/")[5].split("-")[0]+'.json';
+    
+    // for (var t_url = l_limit; t_url < u_limit; t_url++) {
+    data_parsed = false;
+    webpage = require("webpage");
+    page = null;
+    var resources = [];
+    nextTopUrl = function(){
+    	fs.write(path, "]}", 'a');
+    	if (l_limit < u_limit){
+    		l_limit++;	
+    		initiate();
+    	} else {
+			return callbackFinal(); 
+    	}
+    };
+    initiate = function(){
+    	if (u_limit == 0) {
+	    	u_limit = top_urls.length;
+	    }
+    	urls = [top_urls[l_limit]];
+    	path = 'doctoralia_data_'+urls[0].split("/")[5].split("-")[0]+'.json';
 		console.log(path);
-	    urlIndex = 0;
-	    data_parsed = false;
-	    webpage = require("webpage");
-	    page = null;
-	    var resources = [];
-	    next = function(status, url) {
-	        page.close();
-	        callbackPerUrl(status, url);
-	        return retrieve();
-	    };
-	    nextData = function(status, url) {
-	        page.close();
-	        callbackPerUrl(status, url);
-	        return retrieveData();
-	    };
-	    retrieveData = function(){
-	    	if(parse_data_url_array.length > 0){
-	    		url = parse_data_url_array.shift();
-	    		page = webpage.create();
-		        // page.onResourceRequested = function(requestData, request) {
-		        //     console.log('~~~loading~~~', requestData['url']);  // this does get logged now
-		        //     resources[requestData.id] = requestData.stage;
-		        // };
-		        // page.onResourceReceived = function(response) {
-		        // 	console.log('~~~response~~~', response.stage);  // this does get logged now
-		        //     resources[response.id] = response.stage;
-		        // };
-		        console.log("dataUrl: "+url);
-				return page.open(url, function (status) {
-					if (status == "success"){
-						page.injectJs('jquery.js');
-						var click_count = 0;
-						var cur_value = 0;
-						var max_wait_count = 0;
+		fs.write(path, "{\"webData\": [", 'w');
+		retrieve();
+    }
+    next = function(status, url) {
+        page.close();
+        callbackPerUrl(status, url);
+        return retrieve();
+    };
+    nextData = function(status, url) {
+        page.close();
+        callbackPerUrl(status, url);
+        return retrieveData();
+    };
+    retrieveData = function(){
+    	if(parse_data_url_array.length > 0){
+    		url = parse_data_url_array.shift();
+    		page = webpage.create();
+	        // page.onResourceRequested = function(requestData, request) {
+	        //     console.log('~~~loading~~~', requestData['url']);  // this does get logged now
+	        //     resources[requestData.id] = requestData.stage;
+	        // };
+	        // page.onResourceReceived = function(response) {
+	        // 	console.log('~~~response~~~', response.stage);  // this does get logged now
+	        //     resources[response.id] = response.stage;
+	        // };
+	        console.log("dataUrl: "+url);
+			return page.open(url, function (status) {
+				if (status == "success"){
+					page.injectJs('jquery.js');
+					var click_count = 0;
+					var cur_value = 0;
+					var max_wait_count = 0;
 
-						function mouseclick( element ) {
-						    // create a mouse click event
-						    var event = document.createEvent( 'MouseEvents' );
-						    event.initMouseEvent( 'click', true, true, window, 1, 0, 0 );
-						 
-						    // send click to element
-						    element.dispatchEvent( event );
-						}
+					function mouseclick( element ) {
+					    // create a mouse click event
+					    var event = document.createEvent( 'MouseEvents' );
+					    event.initMouseEvent( 'click', true, true, window, 1, 0, 0 );
+					 
+					    // send click to element
+					    element.dispatchEvent( event );
+					}
 
-						function handle_page( page ) {
-							var phone_max = page.evaluate(function(){
-								pmax = $(".location .viewnumber").length;
-								return pmax;
-							});
-							console.log("phone_max: "+phone_max);
+					function handle_page( page ) {
+						var phone_max = page.evaluate(function(){
+							pmax = $(".location .viewnumber").length;
+							return pmax;
+						});
+						console.log("phone_max: "+phone_max);
 
-							// var offsets = page.evaluate(function(){
-							// 	var offsets = [];
-							// 	$("#locationMap .viewnumber").each(function(){offsets.push($(this).offset());});
-							// 	return offsets;
-							// });
+						// var offsets = page.evaluate(function(){
+						// 	var offsets = [];
+						// 	$("#locationMap .viewnumber").each(function(){offsets.push($(this).offset());});
+						// 	return offsets;
+						// });
 
-							// for (var i = 0; i < offsets.length; i++) {
-							// 	var offset = offsets[i];
-							// 	console.log(JSON.stringify(offset));
-							// 	page.sendEvent('click', offset.left + 1, offset.top + 1);
-							// };
+						// for (var i = 0; i < offsets.length; i++) {
+						// 	var offset = offsets[i];
+						// 	console.log(JSON.stringify(offset));
+						// 	page.sendEvent('click', offset.left + 1, offset.top + 1);
+						// };
 
-							init_click(page, 0);
+						init_click(page, 0);
 
-						    get_all_phone_numbers(page, phone_max);	   
-						    // handle_click_reaction( page )
-						}
+					    get_all_phone_numbers(page, phone_max);	   
+					    // handle_click_reaction( page )
+					}
 
-						function init_click(page, count){
-							console.log("Event Called");
-							var x = page.evaluate(function(count){
-								$("#locationMap .viewnumber:eq("+count+")").each(
-									function(){
-										var el = this;
-									    var ev = document.createEvent("MouseEvent");
-									    ev.initMouseEvent(
-									        "click",
-									        true, true,
-									        window, null,
-									        0, 0, 0, 0,
-									        false, false, false, false,
-									        0, null
-									    );
-									    el.dispatchEvent(ev);
-									}
-								);
-								return $("#locationMap .viewnumber:eq("+count+")").text();
-							}, count);
-							console.log(x);
-						}
-
-						function get_all_phone_numbers(page, phone_max){
-							// Get the avialable phone number count & update global value
-							// var cur_val = get_current_phone_numbers(page);
-							// console.log("phone actual count: "+cur_val+" :: phone global count: "+cur_value);
-							// if (cur_val > cur_value){
-							// 	window.setTimeout(function(){
-							// 		init_click(page, click_count++);
-							// 	},1000);
-							// 	cur_value = cur_val;
-							// 	if (cur_value >= phone_max){
-							// 		handle_click_reaction( page );
-							// 	} 
-							// }
-							// window.setTimeout(
-						 //        function () {
-						 //            get_all_phone_numbers(page, phone_max);
-						 //        },
-						 //        5000 // give page 500 ms to process click
-						 //    );
-							max_wait_count++;
-							var cur_value = page.evaluate(function(){
-								return $("#phone-modal-content").children().length;
-							});
-							if (cur_value >= phone_max || max_wait_count > (/* phone_max + */2)){
-								handle_click_reaction( page );
-							} else {
-								if (click_count < phone_max){
-									init_click(page, click_count++);
+					function init_click(page, count){
+						console.log("Event Called");
+						var x = page.evaluate(function(count){
+							$("#locationMap .viewnumber:eq("+count+")").each(
+								function(){
+									var el = this;
+								    var ev = document.createEvent("MouseEvent");
+								    ev.initMouseEvent(
+								        "click",
+								        true, true,
+								        window, null,
+								        0, 0, 0, 0,
+								        false, false, false, false,
+								        0, null
+								    );
+								    el.dispatchEvent(ev);
 								}
-								window.setTimeout(
-							        function () {
-							            get_all_phone_numbers(page, phone_max);
-							        },
-							        8000 // give page 500 ms to process click
-							    );
-							}	
-						}
+							);
+							return $("#locationMap .viewnumber:eq("+count+")").text();
+						}, count);
+						console.log(x);
+					}
 
-						function get_current_phone_numbers(page){
-							var cur_val = page.evaluate(function(){
-								return $("#phone-modal-content").children().length;
-							});
-							return cur_val;
-						}
-						
-						function handle_click_reaction(page){
-							data = page.evaluate(function(){
+					function get_all_phone_numbers(page, phone_max){
+						// Get the avialable phone number count & update global value
+						// var cur_val = get_current_phone_numbers(page);
+						// console.log("phone actual count: "+cur_val+" :: phone global count: "+cur_value);
+						// if (cur_val > cur_value){
+						// 	window.setTimeout(function(){
+						// 		init_click(page, click_count++);
+						// 	},1000);
+						// 	cur_value = cur_val;
+						// 	if (cur_value >= phone_max){
+						// 		handle_click_reaction( page );
+						// 	} 
+						// }
+						// window.setTimeout(
+					 //        function () {
+					 //            get_all_phone_numbers(page, phone_max);
+					 //        },
+					 //        5000 // give page 500 ms to process click
+					 //    );
+						max_wait_count++;
+						var cur_value = page.evaluate(function(){
+							return $("#phone-modal-content").children().length;
+						});
+						if (cur_value >= phone_max || max_wait_count > ( phone_max + 2)){
+							handle_click_reaction( page );
+						} else {
+							if (click_count < phone_max){
+								init_click(page, click_count++);
+							}
+							window.setTimeout(
+						        function () {
+						            get_all_phone_numbers(page, phone_max);
+						        },
+						        8000 // give page 500 ms to process click
+						    );
+						}	
+					}
 
+					function get_current_phone_numbers(page){
+						var cur_val = page.evaluate(function(){
+							return $("#phone-modal-content").children().length;
+						});
+						return cur_val;
+					}
+					
+					function handle_click_reaction(page){
+						data = page.evaluate(function(){
+							if ($(".title h1 a").text() != ""){
 								// Profile picture
 								var pic = $("figure.photo img").attr("src");
 
@@ -239,11 +252,12 @@ RenderUrlsToFile = function(top_urls, callbackPerUrl, callbackFinal) {
 								var education = {};
 								var edu_cnt = $("section.education ul li").length;
 								for(edu = 0; edu < edu_cnt; edu++){
-									var edu_array = $("section.education ul li:eq("+edu+")").children().map(function(){return $(this).text().trim();}).get();
+									var education_dom = $("section.education ul li:eq("+edu+")");
+									var edu_array = education_dom.children().map(function(){return $(this).text().trim();}).get();
 									education[edu+1] = {
-										"degree": edu_array[0],
-										"institute": edu_array[1],
-										"year": edu_array[2]
+										"degree": education_dom.clone().children().remove().end().text(),
+										"institute": edu_array[0],
+										"year": edu_array[1]
 									};
 								}
 								// var education = $("section.education ul li").map(function(){return $(this).text()}).get().join(", ");
@@ -264,7 +278,16 @@ RenderUrlsToFile = function(top_urls, callbackPerUrl, callbackFinal) {
 									"registration_number": reg_num,
 									"picture": pic
 								};
-							});
+							} else {
+								return "";
+							}
+						});
+						
+						if (data == ""){
+							// Antiscraper handeling
+							parse_data_url_array.push(url);
+							console.log("Antiscraper handeling");
+						} else {
 							if (data_parsed){
 								op_data = ",";
 							} else {
@@ -272,106 +295,113 @@ RenderUrlsToFile = function(top_urls, callbackPerUrl, callbackFinal) {
 								data_parsed = true;
 							}
 							op_data += '{"url":"'+url+'"';
-								op_data += ",\"doctor\": ["+ JSON.stringify(data)+ "]";
+								op_data += ",\"doctor\": "+ JSON.stringify(data);
 								// op_data += ",\"misc_data\": ["+JSON.stringify(misc_data) + "]";
 							op_data += '}';
 					        fs.write(path, op_data, 'a');
-					        return nextData(status, url);
 						}
-
-						handle_page(page);
-					} else {
-						return nextData(status, url);
+				        return nextData(status, url);
 					}
-				});
-	    	} else {
-	    		return next("success", "success");
-	    	}
-	    };
-	    retrieve = function() {
-	    	var url;
-	    	parse_data_url_array = [];
-	        if (urls.length > 0) {
-	            url = urls.shift();
-	            // return if url is already parsed
-	            if(parsed_urls[url] != undefined){
-	            	return next("already parsed", url);
-	            }
-	            urlIndex++;
-				page = webpage.create();
-		        page.viewportSize = {
-		            width: 800,
-		            height: 600
-		        };            
-		        // page.onResourceRequested = function(requestData, request) {
-		        //     console.log('::loading', requestData['url']);  // this does get logged now
-		        //     resources[requestData.id] = requestData.stage;
-		        // };
-		        // page.onResourceReceived = function(response) {
-		        //     resources[response.id] = response.stage;
-		        // };
-		        if (urlIndex == 1){
-		        	fs.write(path, "{\"webData\": [", 'w');
-		        }
-		        console.log("url: "+url);
-				return page.open(url, function (status) {
-					if (status == "success"){
-						page.injectJs('jquery.js');
-						var loops = page.evaluate(function(){
-				        	return $("ul.paging a").map(function(){
-				        		var regex = /^\/medicos(.*)(\/\d+|-\d+-\d+)$/;
-				        		if ($(this).attr("href") != undefined && $(this).attr("href") != null && regex.exec($(this).attr("href"))){
-				        			return $(this).attr("href");
-				        		}
-							}).get().join(",");
-				        });
-				        if (loops == ""){
-				        	parsed_urls[url] = "blocked loops";
-				        	urls.push(url);
-							return next(status, url);
-				        } 
-				        loops.split(",").forEach(function(url){
-				        	if (parsed_urls[url] == undefined){
-				        		urls.push("http://www.doctoralia.com.br"+url);
-				        	}
-				        });
-				        var data_paths = page.evaluate(function(){
-				        	return $("a").map(function(){
-				        		var regex = /^\/medico\/(.*)-\d+$/;
-				        		if ($(this).attr("href") != undefined && $(this).attr("href") != null && regex.exec($(this).attr("href"))){
-				        			return $(this).attr("href");
-				        		}
-							}).get().join(",");
-				        });
-				        if (data_paths == ""){
-				        	parsed_urls[url] = "blocked data paths";
-				        	urls.push(url);
-							return next(status, url);
-				        } 
-				        data_paths.split(",").forEach(function(url){
-				        	if (parse_data_urls[url] == undefined){
-				        		parse_data_urls[url] = 1;
-				        		parse_data_url_array.push("http://www.doctoralia.com.br"+url);
-				        	} else {
-				        		parse_data_urls[url] += 1
-				        	}
-				        });
-						parsed_urls[url] = "success";
-						return nextData(status, url);
-					}  else {
-						parsed_urls[url] = "failure";
-						return next(status, url);
-					} 
-				});
-			} else {
-				fs.write(path, "]}", 'a');
-				console.log("Completed path: "+ path);
-				// return callbackFinal(); 
-			}
-		}
-		return retrieve();
+					handle_page(page);
+				} else {
+					parse_data_url_array.push(url);
+					return nextData(status, url);
+				}
+			});
+    	} else {
+    		return next("success", "success");
+    	}
     };
-    return callbackFinal(); 
+    retrieve = function() {
+    	var url;
+    	parse_data_url_array = [];
+        if (urls.length > 0) {
+            url = urls.shift();
+            // return if url is already parsed
+            if(parsed_urls[url] != undefined){
+            	return next("already parsed", url);
+            }
+			page = webpage.create();
+	        page.viewportSize = {
+	            width: 800,
+	            height: 600
+	        };            
+	        // page.onResourceRequested = function(requestData, request) {
+	        //     console.log('::loading', requestData['url']);  // this does get logged now
+	        //     resources[requestData.id] = requestData.stage;
+	        // };
+	        // page.onResourceReceived = function(response) {
+	        //     resources[response.id] = response.stage;
+	        // };
+	        console.log("url: "+url);
+			return page.open(url, function (status) {
+				if (status == "success"){
+					page.injectJs('jquery.js');
+					var pagination_count = page.evaluate(function(){
+						return $("ul.paging a").length;
+					});
+					var loops = page.evaluate(function(){
+			        	return $("ul.paging a").map(function(){
+			        		var regex = /^\/medicos(.*)(\/\d+|-\d+-\d+)$/;
+			        		if ($(this).attr("href") != undefined && $(this).attr("href") != null && regex.exec($(this).attr("href"))){
+			        			return $(this).attr("href");
+			        		}
+						}).get().join(",");
+			        });
+			        if (loops == "" && pagination_count != 0){
+			        	// parsed_urls[url] = "blocked loops";
+			        	urls.push(url);
+			        	phantom.clearCookies();
+						return next("blocked loops", url);
+			        } 
+			        loops.split(",").forEach(function(url){
+			        	if (parsed_urls[url] == undefined && url != ""){
+			        		urls.push("http://www.doctoralia.com.br"+url);
+			        	}
+			        });
+			        var no_results = page.evaluate(function(){
+			        	return $(".no-results-found").text();
+			        });
+			        var data_paths = page.evaluate(function(){
+			        	return $("a").map(function(){
+			        		var regex = /^\/medico\/(.*)-\d+$/;
+			        		if ($(this).attr("href") != undefined && $(this).attr("href") != null && regex.exec($(this).attr("href"))){
+			        			return $(this).attr("href");
+			        		}
+						}).get().join(",");
+			        });
+			        console.log("data_paths: "+data_paths);
+			        if (data_paths == "" && no_results == ""){
+			        	// parsed_urls[url] = "blocked data paths";
+			        	urls.push(url);
+			        	phantom.clearCookies();
+						return next("blocked data paths", url);
+			        } 
+			        data_paths.split(",").forEach(function(url){
+			        	if (parse_data_urls[url] == undefined && url != ""){
+			        		parse_data_urls[url] = 1;
+			        		parse_data_url_array.push("http://www.doctoralia.com.br"+url);
+			        	} else if(url == ""){
+			        		// Do nothing
+			        	} else {
+			        		parse_data_urls[url] += 1
+			        	}
+			        });
+					parsed_urls[url] = "success";
+					return nextData(status, url);
+				} else {
+					// parsed_urls[url] = "failure";
+					urls.push(url);
+					return next(status, url);
+				} 
+			});
+		} else {
+			console.log("Completed path: "+ path);
+			// return callbackFinal(); 
+			return nextTopUrl();
+		}
+	}
+	return initiate();
 }
 
 top_urls = ["http://www.doctoralia.com.br/medicos/especialidade/acupunturistas-1309/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/alergistas-1302/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/anátomopatologistas-1298/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/anestesiologistas-1325/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/angiologistas-1311/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cardiologistas-1313/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+buco-maxilo-facial-1866/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+cardiovasculares-1320/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+cranio-maxilo-faciales-1989/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+da+mão-1329/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+de+cabeça+e+pescoço-1326/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+do+aparelho+digestivo-1317/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+gerais-1299/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+pediátricos-1322/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+plásticos-1310/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+torácicos-1321/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/cirurgiões+vasculares-1340/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/coloproctologistas-1304/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/dentistas-1433/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/dermatologistas-1314/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/endocrinologistas-1296/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/endoscopistas-1330/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/enfermeiros-1656/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+administração+em+saúde-1344/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+dor-2840/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+medicina+estetica-1863/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+medicina+física+e+reabilitação-1292/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+medicina+nuclear-1337/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+medicina+preventiva-1347/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/especialistas+em+terapias+complementares+e+alternativas-2185/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/fisioterapeutas-1901/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/fonoaudiólogos-2202/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/gastroenterologistas-1315/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/geneticistas-1332/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/geriatras-1295/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/ginecologistas-1300/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/hematologistas-1333/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/homeopatas-1335/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/infectologistas-1323/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/intensivistas-1338/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/internistas-1655/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/mastologistas-1301/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+clínicos-1303/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+de+família-1339/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+de+tráfego-1345/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+de+urgencia-1343/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+do+esporte-1342/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+do+trabalho-1334/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/médicos+peritos-1346/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/nefrologistas-1324/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/neurocirurgiões-1318/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/neurofisiologistas-2639/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/neurologistas-1297/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/nutricionistas-2203/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/nutrologistas-1331/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/oftalmologistas-1305/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/oncologistas-1328/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/optometristas-1865/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/ortopedistas+-+traumatologistas-1306/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/osteopatas-2839/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/otorrinolaringologistas-1308/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/patologistas+clínicos-1316/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/pediatras-1307/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/pneumologistas-1327/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/podólogos-2699/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/psicanalistas-2789/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/psicólogos-1434/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/psicopedagogos-2797/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/psiquiatras-1312/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/quiropraxistas-2381/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/radiologistas-1294/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/radioterapeutas-1319/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/reumatologistas-1336/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/sexólogos-2819/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/terapeutas+ocupacionais-2799/sao+paulo-116705-1", "http://www.doctoralia.com.br/medicos/especialidade/urologistas-1293/sao+paulo-116705-1"];
