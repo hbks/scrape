@@ -417,7 +417,7 @@ if (system.args.length <= 1) {
 
 if (system.args.length > 2) {
     l_limit = parseInt(system.args[2]);
-    u_limit = parseInt(system.args[3]);
+    //u_limit = parseInt(system.args[3]);
 }
 
 var content = '', f = null, lines = null;
@@ -468,3 +468,4 @@ RenderUrlsToFile(top_urls, (function(status, url) {
 }), function() {
     return phantom.exit();
 });
+
